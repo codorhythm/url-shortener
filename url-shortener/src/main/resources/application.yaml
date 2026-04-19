@@ -3,9 +3,9 @@ spring:
     name: url-shortener
 
   datasource:
-    url: jdbc:mysql://localhost:3306/urlshortener?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
-    username: shortener
-    password: shortener123
+    url: jdbc:mysql://roundhouse.proxy.rlwy.net:46487/railway?useSSL=true&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    username: root
+    password: JOhqNxVDpfIHEwghRtugiFqDnpQjVxme
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       maximum-pool-size: 10
@@ -23,14 +23,13 @@ spring:
 
   data:
     redis:
-      host: localhost
+      host: notable-louse-102015.upstash.io
       port: 6379
-      timeout: 2000ms
-      lettuce:
-        pool:
-          max-active: 10
-          max-idle: 5
-          min-idle: 2
+      username: default
+      password: gQAAAAAAAY5_AAIocDExOGVhNzhkYWVjNmE0YWQzODQ1YjBiMWI4MzdjYTk1OHAxMTAyMDE1
+      ssl:
+        enabled: true
+
 
 server:
   port: 8080

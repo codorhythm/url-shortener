@@ -7,12 +7,17 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.time.LocalDateTime;
 import java.util.Map;
+import java.util.logging.Logger;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    private static final Logger logger =
+            Logger.getLogger(GlobalExceptionHandler.class.getName());
+
     @ExceptionHandler(UrlNotFoundException.class)
-    public ResponseEntity<Map<String, Object>> handleUrlNotFound(UrlNotFoundException ex) {
+    public ResponseEntity<Map<String, Object>> handleUrlNotFound(
+            UrlNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
                 "error", ex.getMessage(),
                 "timestamp", LocalDateTime.now().toString(),
@@ -22,6 +27,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGeneral(Exception ex) {
+        logger.severe("Unhandled exception: " + ex.getMessage());
+        ex.printStackTrace();
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
                 "error", "Something went wrong",
                 "timestamp", LocalDateTime.now().toString(),
