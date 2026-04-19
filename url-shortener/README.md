@@ -101,13 +101,13 @@ mvn spring-boot:run
 
 ## Screenshots
 
-![app_start.PNG](../docs/screenshots/app_start.PNG)
-![get_req.PNG](../docs/screenshots/get_req.PNG)
-![live_railway.PNG](../docs/screenshots/live_railway.PNG)
-![Post_req.PNG](../docs/screenshots/Post_req.PNG)
-![redirect_t_google.PNG](../docs/screenshots/redirect_t_google.PNG)
-![redirect_to_google.PNG](../docs/screenshots/redirect_to_google.PNG)
-![redis_with cmds prcsd.PNG](../docs/screenshots/redis_with%20cmds%20prcsd.PNG)
+![app_start.PNG](docs/screenshots/app_start.PNG)
+![get_req.PNG](docs/screenshots/get_req.PNG)
+![live_railway.PNG](docs/screenshots/live_railway.PNG)
+![Post_req.PNG](docs/screenshots/Post_req.PNG)
+![redirect_t_google.PNG](docs/screenshots/redirect_t_google.PNG)
+![redirect_to_google.PNG](docs/screenshots/redirect_to_google.PNG)
+![redis_with cmds prcsd.PNG](docs/screenshots/redis_with%20cmds%20prcsd.PNG)
 
 ---
 
