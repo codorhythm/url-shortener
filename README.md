@@ -101,23 +101,56 @@ mvn spring-boot:run
 
 ## Screenshots
 
-![app_start.PNG](docs/screenshots/app_start.PNG)
-![get_req.PNG](docs/screenshots/get_req.PNG)
-![live_railway.PNG](docs/screenshots/live_railway.PNG)
-![Post_req.PNG](docs/screenshots/Post_req.PNG)
-![redirect_t_google.PNG](docs/screenshots/redirect_t_google.PNG)
-![redirect_to_google.PNG](docs/screenshots/redirect_to_google.PNG)
-![redis_with cmds prcsd.PNG](docs/screenshots/redis_with%20cmds%20prcsd.PNG)
+### App Started
+![app_start](url-shortener/docs/screenshots/app_start.png)
+
+### POST - Shorten URL
+![Post_req](url-shortener/docs/screenshots/post_req.png)
+
+### GET - Redirect
+![redirect_to_google](url-shortener/docs/screenshots/redirect_to_google.png)
+
+### GET - Stats
+![get_req](url-shortener/docs/screenshots/get_req.png)
+
+### Railway MySQL Live
+![live_railway](url-shortener/docs/screenshots/live_railway.png)
+
+### Redis Commands Processed
+![redis](url-shortener/docs/screenshots/redis_with%20cmds%20prcsd.PNG)
 
 ---
 
-## Project Structure
+## Load Test Results
 
-src/main/java/com/shortener/
-├── config/          # Redis configuration
-├── controller/      # REST endpoints
-├── domain/          # JPA entity + DTOs
-├── exception/       # Global exception handling
-├── repository/      # Spring Data JPA repository
-├── service/         # Business logic + caching
-└── util/            # Base62 encoder
+Tested with k6 — 10 concurrent users, 2 minute sustained load
+
+| Metric | Result |
+|---|---|
+| Total requests | 440 |
+| Success rate | 100% |
+| Failure rate | 0.00% |
+| Avg response time | 1.59s* |
+| Min response time | 909ms* |
+
+*Latency includes network round-trip to cloud Redis (Upstash, Mumbai).
+In same-region AWS deployment (app + ElastiCache in same VPC),
+redirect latency is <50ms as Redis calls are <1ms over private network.
+
+### k6 Load Test Output
+![k6-results](url-shortener/docs/screenshots/k6-results.png)
+
+---
+
+## AWS Deployment
+
+Live endpoint: `http://13.127.255.113:8080`
+
+### Health Check on AWS
+![aws-health](url-shortener/docs/screenshots/aws-health.PNG)
+
+### Redirect 302 on AWS
+![aws-redirect](url-shortener/docs/screenshots/postman_aws-redirect.PNG)
+
+### EC2 Instance Running
+![aws-running](url-shortener/docs/screenshots/aws-running.PNG)
