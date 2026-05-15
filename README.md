@@ -1,5 +1,4 @@
-# URL Shortener Service
-
+# ShortScale: High-Throughput URL Redirect Engine
 
 ![Java](https://img.shields.io/badge/Java-17-orange)
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.13-green)
@@ -8,7 +7,7 @@
 ![AWS](https://img.shields.io/badge/AWS-EC2%20%7C%20RDS%20%7C%20ElastiCache-yellow)
 
 A high-performance distributed URL shortener service built with Java and Spring Boot.
-Handles ~100K requests/day with <50ms redirect latency using a two-tier caching strategy.
+Handles ~100K requests/day with <50ms redirect latency using a two-tier caching strategy with probabilistic early refresh to prevent cache stampede on hot URLs.
 
 ---
 
@@ -17,11 +16,13 @@ Handles ~100K requests/day with <50ms redirect latency using a two-tier caching 
 Client → Spring Boot API → Redis L1 Cache (hit ~95%)
 ↓ (cache miss)
 MySQL L2 (source of truth)
+
 ## Key Design Decisions
 
 - **Base62 encoding** over DB auto-increment ID → 62^7 = 3.5 trillion unique URLs, URL-safe characters
 - **302 redirect** over 301 → forces every redirect through server for click tracking
 - **Cache-aside pattern** → Redis checked first, MySQL fallback, Redis repopulated on miss
+- **Probabilistic early refresh** → prevents thundering herd when hot keys expire under load
 - **Stateless service** → no session state, horizontal scaling ready
 - **HikariCP pool size 10** → handles request bursts without overwhelming MySQL
 
@@ -91,8 +92,8 @@ GET /actuator/health
 
 ### Run
 ```bash
-git clone https://github.com/codorhythm/url-shortener.git
-cd url-shortener
+git clone https://github.com/codorhythm/shortscale.git
+cd shortscale
 # Add your DB credentials to application.yml
 mvn spring-boot:run
 ```
