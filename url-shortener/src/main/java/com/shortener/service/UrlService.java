@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
-import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
@@ -32,16 +32,10 @@ public class UrlService {
     private long cacheTtlHours;
 
     private static final String CACHE_PREFIX = "url:";
+    private static final double BETA = 1.0;
 
-    /**
-     * Shorten a long URL.
-     * Flow: Save to MySQL first to get auto-generated ID,
-     * then encode that ID to Base62 as the short code.
-     * Why ID-based? — Guaranteed uniqueness without collision checks.
-     */
     @Transactional
     public UrlResponseDto shortenUrl(UrlRequestDto request) {
-        // Save with placeholder shortCode to get the DB-generated ID
         Url url = Url.builder()
                 .originalUrl(request.getOriginalUrl())
                 .shortCode("temp")
@@ -49,12 +43,10 @@ public class UrlService {
 
         Url saved = urlRepository.save(url);
 
-        // Encode the DB ID to Base62
         String shortCode = base62Encoder.encode(saved.getId());
         saved.setShortCode(shortCode);
         urlRepository.save(saved);
 
-        // Warm up Redis cache immediately after creation
         redisTemplate.opsForValue().set(
                 CACHE_PREFIX + shortCode,
                 saved.getOriginalUrl(),
@@ -65,32 +57,27 @@ public class UrlService {
         return buildResponse(saved);
     }
 
-    /**
-     * Resolve a short code to original URL.
-     * Two-tier cache-aside pattern:
-     * L1: Redis (in-memory, <1ms) -> L2: MySQL (disk, ~5ms) -> 404
-     *
-     * This is why we achieve <50ms redirect latency —
-     * ~95% of requests are served from Redis without hitting MySQL.
-     */
     @Transactional
     public String resolveUrl(String shortCode) {
-        // L1 — Check Redis first
         String cacheKey = CACHE_PREFIX + shortCode;
-        Object cached = redisTemplate.opsForValue().get(cacheKey);
 
-        if (cached != null) {
-            log.debug("Cache HIT for shortCode: {}", shortCode);
-            incrementClickCountAsync(shortCode);
-            return cached.toString();
+        Object cached = redisTemplate.opsForValue().get(cacheKey);
+        Long ttlSeconds = redisTemplate.getExpire(cacheKey, TimeUnit.SECONDS);
+
+        if (cached != null && ttlSeconds != null && ttlSeconds > 0) {
+            double refreshProbability = Math.exp(-BETA * ttlSeconds / (cacheTtlHours * 3600.0));
+            if (Math.random() > refreshProbability) {
+                log.debug("Cache HIT for shortCode: {}", shortCode);
+                incrementClickCountAsync(shortCode);
+                return cached.toString();
+            }
+            log.debug("Probabilistic early refresh triggered for shortCode: {}", shortCode);
         }
 
-        // L2 — Fall back to MySQL
         log.debug("Cache MISS for shortCode: {}", shortCode);
         Url url = urlRepository.findByShortCode(shortCode)
                 .orElseThrow(() -> new UrlNotFoundException(shortCode));
 
-        // Repopulate Redis cache (cache-aside pattern)
         redisTemplate.opsForValue().set(
                 cacheKey,
                 url.getOriginalUrl(),
@@ -108,7 +95,6 @@ public class UrlService {
     }
 
     private void incrementClickCountAsync(String shortCode) {
-        // Non-blocking — don't slow down the redirect for analytics
         try {
             urlRepository.incrementClickCount(shortCode);
         } catch (Exception e) {
